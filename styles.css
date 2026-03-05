@@ -1,0 +1,349 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Source+Sans+3:wght@300;400;600;700&display=swap');
+
+ :root {
+            --udep-blue:    #003876;
+            --udep-blue-mid:#004fa3;
+            --udep-red:     #c8102e;
+            --udep-gold:    #e8b84b;
+            --udep-light:   #f4f6fb;
+            --udep-border:  #d0d8e8;
+            --text-dark:    #1a2a40;
+            --text-muted:   #6b7a96;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background: var(--udep-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ── Fondo decorativo ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                linear-gradient(135deg, #003876 0%, #004fa3 45%, #1a5fb4 70%, #e8eff8 100%);
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -120px; right: -120px;
+            width: 480px; height: 480px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(200,16,46,0.18) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        /* Patrón geométrico sutil */
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image:
+                repeating-linear-gradient(
+                    45deg,
+                    rgba(255,255,255,0.03) 0px,
+                    rgba(255,255,255,0.03) 1px,
+                    transparent 1px,
+                    transparent 40px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    rgba(255,255,255,0.03) 0px,
+                    rgba(255,255,255,0.03) 1px,
+                    transparent 1px,
+                    transparent 40px
+                );
+        }
+
+        .logo{
+            width: 120px;
+            height: auto;
+        }
+
+        /* ── Tarjeta principal ── */
+        .card {
+            position: relative;
+            z-index: 1;
+            width: min(440px, 94vw);
+            background: #fff;
+            border-radius: 4px;
+            box-shadow:
+                0 2px 8px rgba(0,0,0,0.08),
+                0 24px 64px rgba(0,56,118,0.22),
+                0 0 0 1px rgba(0,56,118,0.10);
+            overflow: hidden;
+            animation: slideUp .55s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Banda superior con color UDEP */
+        .card-header {
+            background: var(--udep-blue-mid);
+            padding: 32px 40px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--udep-red) 0%, var(--udep-gold) 100%);
+        }
+
+        /* Logo SVG inline (escudo simplificado + texto) */
+        .logo-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-shield {
+            width: 60px;
+            height: 68px;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+        }
+
+        .logo-text {
+            font-family: 'Merriweather', serif;
+            color: #fff;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .logo-text span {
+            display: block;
+            font-size: .72rem;
+            font-weight: 300;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.75);
+            margin-top: 2px;
+        }
+
+        /* ── Cuerpo del formulario ── */
+        .card-body {
+            padding: 36px 40px 40px;
+        }
+
+        .section-title {
+            font-family: 'Merriweather', serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--udep-blue);
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .section-subtitle {
+            font-size: .82rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        /* Grupos de campo */
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field label {
+            display: block;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: color .2s;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 11px 14px 11px 42px;
+            border: 1.5px solid var(--udep-border);
+            border-radius: 3px;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: .97rem;
+            color: var(--text-dark);
+            background: #fafbfd;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+            outline: none;
+        }
+
+        .field input::placeholder { color: #b0bac8; }
+
+        .field input:focus {
+            border-color: var(--udep-blue-mid);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0,79,163,0.12);
+        }
+
+        .field input:focus + svg,
+        .input-wrap:focus-within svg {
+            color: var(--udep-blue-mid);
+        }
+
+        /* Ícono dentro del wrap (orden correcto) */
+        .input-wrap input { order: 1; }
+        .input-wrap svg   { order: 0; }
+
+        /* Olvidé mi contraseña */
+        .forgot {
+            display: block;
+            text-align: right;
+            font-size: .78rem;
+            color: var(--udep-blue-mid);
+            text-decoration: none;
+            margin-top: -8px;
+            margin-bottom: 26px;
+            transition: color .2s;
+        }
+        .forgot:hover { color: var(--udep-red); text-decoration: underline; }
+
+        /* Botón */
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: var(--udep-blue);
+            color: #fff;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: .97rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: background .25s, transform .15s, box-shadow .2s;
+            box-shadow: 0 4px 16px rgba(0,56,118,0.28);
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+        }
+
+        .btn-login:hover {
+            background: var(--udep-blue-mid);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px rgba(0,56,118,0.35);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0,56,118,0.2);
+        }
+
+        /* Separador */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 22px 0;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--udep-border);
+        }
+        .divider span {
+            font-size: .75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* Ayuda */
+        .help-text {
+            font-size: .78rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.6;
+        }
+        .help-text a {
+            color: var(--udep-blue-mid);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .help-text a:hover { color: var(--udep-red); }
+
+        /* ── Pie de tarjeta ── */
+        .card-footer {
+            background: var(--udep-light);
+            border-top: 1px solid var(--udep-border);
+            padding: 14px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-label {
+            font-size: .72rem;
+            color: var(--text-muted);
+            letter-spacing: .04em;
+        }
+
+        .footer-badge {
+            font-size: .7rem;
+            font-weight: 700;
+            color: var(--udep-red);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            border: 1.5px solid var(--udep-red);
+            border-radius: 2px;
+            padding: 2px 7px;
+        }
+
+        /* ── Copyright ── */
+        .copyright {
+            position: relative;
+            z-index: 1;
+            margin-top: 20px;
+            font-size: .72rem;
+            color: rgba(255,255,255,.5);
+            letter-spacing: .03em;
+            text-align: center;
+        }
