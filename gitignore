@@ -1,0 +1,6 @@
+# Credenciales — nunca subir
+.env
+
+# Archivos compilados Python
+__pycache__/
+*.pyc

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consola de Asesorados</title>
+</head>
+<body>
+
+    <div id="bienvenida">Cargando...</div>
+
+    <script>
+        // Al cargar la página, pide el PIDM al backend
+        async function cargarSesion() {
+            try {
+                const response = await fetch('/api/sesion');
+
+                // Si no está autenticado, regresa al login
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('bienvenida').textContent =
+                        `Bienvenido ${data.pidm}`;
+                }
+
+            } catch (error) {
+                document.getElementById('bienvenida').textContent =
+                    'Error al cargar la sesión';
+            }
+        }
+
+        cargarSesion();
+    </script>
+
+</body>
+</html>

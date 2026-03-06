@@ -1,5 +1,8 @@
 # Demo Asesores
 
-Para probar el demo del script.py
+Para poder instalar la demo:
 
-<code>pip install oracledb</code>
+<code>
+pip install flask
+python app.py
+</code>
