@@ -85,7 +85,126 @@ def login():
       # conn   = get_db()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT MAL.GOREMAL_PIDM FROM GENERAL.GOREMAL MAL WHERE MAL.GOREMAL_PREFERRED_IND = 'Y' AND MAL.GOREMAL_EMAIL_ADDRESS = :correo
+            WITH ActiveProgram AS (
+	SELECT *
+	FROM (
+	    SELECT
+	    	PER.SPRIDEN_PIDM,
+	        PER.SPRIDEN_ID,
+	        PER.SPRIDEN_FIRST_NAME,
+	        PER.SPRIDEN_LAST_NAME,
+	        TSP.SGRSTSP_TERM_CODE_EFF,
+	        TSP.SGRSTSP_KEY_SEQNO,
+	        TSP.SGRSTSP_STSP_CODE,
+	        ROW_NUMBER() OVER (PARTITION BY PER.SPRIDEN_ID, PER.SPRIDEN_PIDM, TSP.SGRSTSP_KEY_SEQNO ORDER BY TSP.SGRSTSP_TERM_CODE_EFF DESC) AS RN_AP
+	    FROM SATURN.SGRSTSP TSP
+	    INNER JOIN SATURN.SPRIDEN PER
+	        ON TSP.SGRSTSP_PIDM = PER.SPRIDEN_PIDM
+	        AND PER.SPRIDEN_ID IS NOT NULL
+	        AND PER.SPRIDEN_CHANGE_IND IS NULL
+	    INNER JOIN SATURN.SGBSTDN TDN
+	    	ON TDN.SGBSTDN_PIDM = PER.SPRIDEN_PIDM
+	    WHERE
+	    	TSP.SGRSTSP_STSP_CODE = 'AS'
+	    	AND PER.SPRIDEN_PIDM IN (
+		    	SELECT DISTINCT
+					ADVR.SGRADVR_PIDM 
+				FROM SATURN.SGRADVR ADVR
+				WHERE
+					ADVR.SGRADVR_PRIM_IND = 'Y'
+					AND ADVR.SGRADVR_ADVR_PIDM = (
+								SELECT MAL.GOREMAL_PIDM
+								FROM GENERAL.GOREMAL MAL
+								WHERE MAL.GOREMAL_PREFERRED_IND = 'Y'
+									AND MAL.GOREMAL_EMAIL_ADDRESS = :correo 
+							)
+	    	)
+	)
+	WHERE RN_AP = 1
+),
+AlumnosActivos AS (
+	SELECT
+		MSN.SPRIDEN_PIDM,
+	    MSN.SPRIDEN_ID,
+	    MSN.SPRIDEN_FIRST_NAME,
+	    MSN.SPRIDEN_LAST_NAME,
+	    MSN.SORLCUR_TERM_CODE_ADMIT,
+	    MSN.SGRSTSP_KEY_SEQNO,
+	    MSN.SORLCUR_PROGRAM,
+	    MSN.SORLCUR_CAMP_CODE,
+	    MSN.SORLCUR_SEQNO
+	FROM (
+		SELECT
+			MSN.*,
+		    ROW_NUMBER() OVER (PARTITION BY MSN.SPRIDEN_ID, MSN.SORLCUR_PROGRAM, MSN.SORLCUR_CAMP_CODE ORDER BY MSN.SORLCUR_SEQNO DESC) AS RN_PER
+		FROM (
+		    SELECT
+	            AP.SPRIDEN_PIDM,
+	            AP.SPRIDEN_ID,
+	            AP.SPRIDEN_FIRST_NAME,
+	            AP.SPRIDEN_LAST_NAME,
+	            AP.SGRSTSP_KEY_SEQNO,
+		        LCUR.SORLCUR_TERM_CODE_ADMIT,
+		        LCUR.SORLCUR_PROGRAM,
+		        LCUR.SORLCUR_CAMP_CODE,
+		        LCUR.SORLCUR_LEVL_CODE,
+		        LCUR.SORLCUR_SEQNO,
+		        ROW_NUMBER() OVER (PARTITION BY AP.SPRIDEN_ID, AP.SPRIDEN_PIDM, AP.SGRSTSP_KEY_SEQNO ORDER BY LCUR.SORLCUR_SEQNO DESC) AS RN
+		    FROM ActiveProgram AP
+		    INNER JOIN SATURN.SORLCUR LCUR
+		        ON AP.SPRIDEN_PIDM = LCUR.SORLCUR_PIDM
+		        AND AP.SGRSTSP_KEY_SEQNO = LCUR.SORLCUR_KEY_SEQNO
+		        AND LCUR.SORLCUR_ROLL_IND = 'Y'
+	    ) MSN
+	    WHERE
+	    	RN = 1
+	    	AND MSN.SORLCUR_LEVL_CODE IN ('PR', 'PP')
+	) MSN
+	WHERE
+		RN_PER = 1
+),
+CicloActual AS (
+	SELECT *
+	FROM(
+		SELECT
+			NSP.SFRENSP_PIDM,
+			NSP.SFRENSP_TERM_CODE,
+			NSP.SFRENSP_KEY_SEQNO,
+			NSP.CICLO_ACTUAL_1,
+			NSP.ORDEN_MERITO_1,
+			NSP.TOTAL_MERITO_1,
+			NSP.DATOS_MERITO_1,
+			ROW_NUMBER() OVER(PARTITION BY NSP.SFRENSP_PIDM, NSP.SFRENSP_KEY_SEQNO ORDER BY SFRENSP_TERM_CODE DESC) AS RN_NSP
+		FROM SFRENSP_ADD NSP
+	) NSP
+	WHERE NSP.RN_NSP = 1
+),
+BecaActual AS (
+	SELECT *
+	FROM(
+		SELECT
+			NSP.SFRENSP_PIDM,
+			NSP.SFRENSP_TERM_CODE,
+			NSP.SFRENSP_KEY_SEQNO,
+			NSP.CICLO_ACTUAL_1,
+			NSP.ORDEN_MERITO_1,
+			NSP.TOTAL_MERITO_1,
+			NSP.DATOS_MERITO_1,
+			ROW_NUMBER() OVER(PARTITION BY NSP.SFRENSP_PIDM, NSP.SFRENSP_KEY_SEQNO ORDER BY SFRENSP_TERM_CODE DESC) AS RN_NSP
+		FROM SFRENSP_ADD NSP
+	) NSP
+	WHERE NSP.RN_NSP = 1
+)
+SELECT
+	AAS.*,
+	NSP.SFRENSP_TERM_CODE AS ULTIMO_PERIODO_SFRENSP,
+	NSP.SFRENSP_KEY_SEQNO AS KEY_SEQNO,
+	NSP.CICLO_ACTUAL_1 AS CICLO_ACTUAL,
+	NSP.DATOS_MERITO_1 AS ATRIBUTO_ALUMNO
+FROM AlumnosActivos AAS
+INNER JOIN CicloActual NSP
+	ON NSP.SFRENSP_PIDM = AAS.SPRIDEN_PIDM
+	AND NSP.SFRENSP_KEY_SEQNO = AAS.SGRSTSP_KEY_SEQNO
         """, {"correo": usuario})
 
         fila = cursor.fetchone()
@@ -102,6 +221,146 @@ def login():
         session['pidm']    = pidm
 
         return jsonify({"success": True, "mensaje": "Login exitoso", "pidm": pidm})
+
+    except Exception as e:
+        return jsonify({"success": False, "mensaje": f"Error de base de datos: {str(e)}"}), 500
+
+# ─────────────────────────────────────────
+#  Consulta principal de alumnos asesorados
+# ─────────────────────────────────────────
+SQL_ALUMNOS = """
+WITH ActiveProgram AS (
+    SELECT *
+    FROM (
+        SELECT
+            PER.SPRIDEN_PIDM,
+            PER.SPRIDEN_ID,
+            PER.SPRIDEN_FIRST_NAME,
+            PER.SPRIDEN_LAST_NAME,
+            TSP.SGRSTSP_TERM_CODE_EFF,
+            TSP.SGRSTSP_KEY_SEQNO,
+            TSP.SGRSTSP_STSP_CODE,
+            ROW_NUMBER() OVER (PARTITION BY PER.SPRIDEN_ID, PER.SPRIDEN_PIDM, TSP.SGRSTSP_KEY_SEQNO ORDER BY TSP.SGRSTSP_TERM_CODE_EFF DESC) AS RN_AP
+        FROM SATURN.SGRSTSP TSP
+        INNER JOIN SATURN.SPRIDEN PER
+            ON TSP.SGRSTSP_PIDM = PER.SPRIDEN_PIDM
+            AND PER.SPRIDEN_ID IS NOT NULL
+            AND PER.SPRIDEN_CHANGE_IND IS NULL
+        INNER JOIN SATURN.SGBSTDN TDN
+            ON TDN.SGBSTDN_PIDM = PER.SPRIDEN_PIDM
+        WHERE
+            TSP.SGRSTSP_STSP_CODE = 'AS'
+            AND PER.SPRIDEN_PIDM IN (
+                SELECT DISTINCT
+                    ADVR.SGRADVR_PIDM
+                FROM SATURN.SGRADVR ADVR
+                WHERE
+                    ADVR.SGRADVR_PRIM_IND = 'Y'
+                    AND ADVR.SGRADVR_ADVR_PIDM = (
+                        SELECT MAL.GOREMAL_PIDM
+                        FROM GENERAL.GOREMAL MAL
+                        WHERE MAL.GOREMAL_PREFERRED_IND = 'Y'
+                            AND MAL.GOREMAL_EMAIL_ADDRESS = :correo
+                    )
+            )
+    )
+    WHERE RN_AP = 1
+),
+AlumnosActivos AS (
+    SELECT
+        MSN.SPRIDEN_PIDM,
+        MSN.SPRIDEN_ID,
+        MSN.SPRIDEN_FIRST_NAME,
+        MSN.SPRIDEN_LAST_NAME,
+        MSN.SORLCUR_TERM_CODE_ADMIT,
+        MSN.SGRSTSP_KEY_SEQNO,
+        MSN.SORLCUR_PROGRAM,
+        MSN.SORLCUR_CAMP_CODE,
+        MSN.SORLCUR_SEQNO
+    FROM (
+        SELECT
+            MSN.*,
+            ROW_NUMBER() OVER (PARTITION BY MSN.SPRIDEN_ID, MSN.SORLCUR_PROGRAM, MSN.SORLCUR_CAMP_CODE ORDER BY MSN.SORLCUR_SEQNO DESC) AS RN_PER
+        FROM (
+            SELECT
+                AP.SPRIDEN_PIDM,
+                AP.SPRIDEN_ID,
+                AP.SPRIDEN_FIRST_NAME,
+                AP.SPRIDEN_LAST_NAME,
+                AP.SGRSTSP_KEY_SEQNO,
+                LCUR.SORLCUR_TERM_CODE_ADMIT,
+                LCUR.SORLCUR_PROGRAM,
+                LCUR.SORLCUR_CAMP_CODE,
+                LCUR.SORLCUR_LEVL_CODE,
+                LCUR.SORLCUR_SEQNO,
+                ROW_NUMBER() OVER (PARTITION BY AP.SPRIDEN_ID, AP.SPRIDEN_PIDM, AP.SGRSTSP_KEY_SEQNO ORDER BY LCUR.SORLCUR_SEQNO DESC) AS RN
+            FROM ActiveProgram AP
+            INNER JOIN SATURN.SORLCUR LCUR
+                ON AP.SPRIDEN_PIDM = LCUR.SORLCUR_PIDM
+                AND AP.SGRSTSP_KEY_SEQNO = LCUR.SORLCUR_KEY_SEQNO
+                AND LCUR.SORLCUR_ROLL_IND = 'Y'
+        ) MSN
+        WHERE
+            RN = 1
+            AND MSN.SORLCUR_LEVL_CODE IN ('PR', 'PP')
+    ) MSN
+    WHERE
+        RN_PER = 1
+),
+CicloActual AS (
+    SELECT *
+    FROM (
+        SELECT
+            NSP.SFRENSP_PIDM,
+            NSP.SFRENSP_TERM_CODE,
+            NSP.SFRENSP_KEY_SEQNO,
+            NSP.CICLO_ACTUAL_1,
+            NSP.ORDEN_MERITO_1,
+            NSP.TOTAL_MERITO_1,
+            NSP.DATOS_MERITO_1,
+            ROW_NUMBER() OVER(PARTITION BY NSP.SFRENSP_PIDM, NSP.SFRENSP_KEY_SEQNO ORDER BY SFRENSP_TERM_CODE DESC) AS RN_NSP
+        FROM SFRENSP_ADD NSP
+    ) NSP
+    WHERE NSP.RN_NSP = 1
+)
+SELECT
+    AAS.SPRIDEN_ID,
+    AAS.SPRIDEN_FIRST_NAME,
+    AAS.SPRIDEN_LAST_NAME,
+    AAS.SORLCUR_PROGRAM,
+    AAS.SORLCUR_CAMP_CODE,
+    AAS.SORLCUR_TERM_CODE_ADMIT,
+    NSP.CICLO_ACTUAL_1  AS CICLO_ACTUAL,
+    NSP.DATOS_MERITO_1  AS ATRIBUTO_ALUMNO
+FROM AlumnosActivos AAS
+INNER JOIN CicloActual NSP
+    ON NSP.SFRENSP_PIDM = AAS.SPRIDEN_PIDM
+    AND NSP.SFRENSP_KEY_SEQNO = AAS.SGRSTSP_KEY_SEQNO
+ORDER BY AAS.SPRIDEN_LAST_NAME, AAS.SPRIDEN_FIRST_NAME
+"""
+
+# ─────────────────────────────────────────
+#  API: Lista de alumnos asesorados
+# ─────────────────────────────────────────
+@app.route('/api/alumnos')
+def alumnos():
+    if 'usuario' not in session:
+        return jsonify({"success": False, "mensaje": "No autenticado"}), 401
+
+    usuario = session['usuario']
+    try:
+        dsn = f"{HOST}:{PUERTO}/{SERVICIO}"
+        conn = oracledb.connect(user=USUARIO, password=PASSWORD, dsn=dsn)
+        cursor = conn.cursor()
+        cursor.execute(SQL_ALUMNOS, {"correo": usuario})
+
+        columnas = [col[0] for col in cursor.description]
+        filas    = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        datos = [dict(zip(columnas, fila)) for fila in filas]
+        return jsonify({"success": True, "columnas": columnas, "datos": datos, "total": len(datos)})
 
     except Exception as e:
         return jsonify({"success": False, "mensaje": f"Error de base de datos: {str(e)}"}), 500

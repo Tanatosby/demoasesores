@@ -347,3 +347,256 @@
             letter-spacing: .03em;
             text-align: center;
         }
+
+/* ============================================================
+   TABLA PAGE — Consola de Asesorados
+   ============================================================ */
+
+/* Página de tabla: fondo claro sin degradado de login */
+body.tabla-page {
+    background: var(--udep-light);
+    display: block;
+    overflow: auto;
+}
+body.tabla-page::before,
+body.tabla-page::after,
+body.tabla-page .bg-pattern {
+    display: none;
+}
+
+/* ── Navbar ── */
+.tb-navbar {
+    background: var(--udep-blue);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 62px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.tb-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.tb-logo-text {
+    font-family: 'Merriweather', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: .04em;
+    line-height: 1.2;
+}
+.tb-logo-text span {
+    display: block;
+    font-size: .68rem;
+    font-weight: 300;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.72);
+    margin-top: 1px;
+}
+
+.tb-navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.tb-user-badge {
+    font-size: .82rem;
+    color: rgba(255,255,255,.85);
+    background: rgba(255,255,255,.12);
+    border-radius: 20px;
+    padding: 4px 14px;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tb-btn-logout {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+    border: 1.5px solid rgba(255,255,255,.35);
+    border-radius: 3px;
+    padding: 5px 14px;
+    transition: background .2s, color .2s;
+}
+.tb-btn-logout:hover {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+}
+
+/* ── Contenido principal ── */
+.tb-main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 28px 60px;
+}
+
+/* ── Encabezado de página ── */
+.tb-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.tb-title {
+    font-family: 'Merriweather', serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--udep-blue);
+    margin-bottom: 4px;
+}
+
+.tb-subtitle {
+    font-size: .85rem;
+    color: var(--text-muted);
+}
+
+/* ── Botón Exportar Excel ── */
+.tb-btn-excel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #1a7a3c;
+    color: #fff;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: .88rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background .2s, transform .15s, box-shadow .2s;
+    box-shadow: 0 3px 12px rgba(26,122,60,0.3);
+    white-space: nowrap;
+}
+.tb-btn-excel:hover:not(:disabled) {
+    background: #155f2e;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(26,122,60,0.4);
+}
+.tb-btn-excel:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* ── Estado (cargando / error) ── */
+.tb-estado {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 28px 20px;
+    font-size: .92rem;
+    color: var(--text-muted);
+}
+
+.tb-estado--error {
+    color: var(--udep-red);
+}
+
+.tb-spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(0,56,118,0.2);
+    border-top-color: var(--udep-blue-mid);
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Wrapper con scroll horizontal ── */
+.tb-table-wrap {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow:
+        0 1px 4px rgba(0,0,0,0.06),
+        0 8px 28px rgba(0,56,118,0.10);
+    overflow-x: auto;
+    border: 1px solid var(--udep-border);
+}
+
+/* ── Tabla ── */
+.tb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+    font-family: 'Source Sans 3', sans-serif;
+}
+
+.tb-table thead tr {
+    background: var(--udep-blue);
+    color: #fff;
+}
+
+.tb-table thead th {
+    padding: 13px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: .78rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border-bottom: 3px solid var(--udep-red);
+}
+
+.tb-table tbody tr {
+    border-bottom: 1px solid #edf0f6;
+    transition: background .15s;
+}
+
+.tb-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.tb-table tbody tr:hover {
+    background: #f0f4fb;
+}
+
+.tb-table tbody tr:nth-child(even) {
+    background: #f7f9fd;
+}
+.tb-table tbody tr:nth-child(even):hover {
+    background: #e8eef8;
+}
+
+.tb-table td {
+    padding: 11px 16px;
+    color: var(--text-dark);
+    white-space: nowrap;
+}
+
+/* Columna N° */
+.col-num {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: .8rem;
+    width: 46px;
+    min-width: 46px;
+}
+
+/* Badge de atributo */
+.col-badge {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--udep-blue-mid);
+}
+
