@@ -8,6 +8,192 @@
     <link rel="stylesheet" href="/static/styles.css">
     <!-- SheetJS para exportar a Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        /* ── Layout consola ── */
+        .consola-layout {
+            display: flex;
+            min-height: calc(100vh - 62px);
+        }
+
+        /* ── Sidebar ── */
+        .consola-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--udep-blue-mid);
+            border-right: 1px solid var(--udep-border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0 32px;
+            box-shadow: 2px 0 8px rgba(0,56,118,0.06);
+        }
+
+        .sidebar-section {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--udep-border);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        /* Módulo bienvenida */
+        .sidebar-welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            padding: 16px 20px 20px;
+            border-bottom: 1px solid var(--udep-border);
+        }
+
+        .sidebar-avatar {
+            width: 54px;
+            height: 54px;
+            background: var(--udep-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-avatar svg {
+            color: #fff;
+        }
+
+        .sidebar-welcome-label {
+            font-size: .72rem;
+            color: var(--text-muted);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .sidebar-welcome-name {
+            font-family: 'Merriweather', serif;
+            font-size: .92rem;
+            font-weight: 700;
+            color: var(--udep-blue);
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        /* Menú de módulos */
+        .sidebar-menu {
+            padding: 12px 12px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-menu-label {
+            font-size: .68rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            padding: 8px 8px 6px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: .88rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            transition: background .15s, color .15s;
+            font-family: 'Source Sans 3', sans-serif;
+        }
+
+        .sidebar-item:hover {
+            background: #eef2fb;
+            color: var(--udep-blue-mid);
+        }
+
+        .sidebar-item.active {
+            background: var(--udep-blue);
+            color: #fff;
+        }
+
+        .sidebar-item.active svg {
+            stroke: #fff;
+        }
+
+        .sidebar-item svg {
+            flex-shrink: 0;
+            stroke: var(--text-muted);
+            transition: stroke .15s;
+        }
+
+        .sidebar-item:hover svg {
+            stroke: var(--udep-blue-mid);
+        }
+
+        .sidebar-logout {
+            margin-top: auto;
+            padding: 0 20px;
+        }
+
+        .sidebar-logout a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .82rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color .15s;
+            padding: 8px 0;
+        }
+
+        .sidebar-logout a:hover {
+            color: var(--udep-red);
+        }
+
+        /* ── Área de contenido ── */
+        .consola-content {
+            flex: 1;
+            padding: 32px 32px 60px;
+            overflow-x: auto;
+            background: var(--udep-light);
+        }
+
+        /* Panel de bienvenida inicial (antes de elegir módulo) */
+        .panel-inicio {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            gap: 16px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .panel-inicio svg {
+            opacity: .25;
+        }
+
+        .panel-inicio h2 {
+            font-family: 'Merriweather', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--udep-blue);
+            opacity: .5;
+        }
+
+        .panel-inicio p {
+            font-size: .88rem;
+        }
+    </style>
 </head>
 <body class="tabla-page">
 
@@ -19,96 +205,177 @@
                 <span>Sistema de Asesoramiento</span>
             </div>
         </div>
-        <div class="tb-navbar-right">
-            <span class="tb-user-badge" id="tb-usuario">—</span>
-            <a href="/api/logout" class="tb-btn-logout">Cerrar sesión</a>
-        </div>
     </header>
 
-    <!-- ── Contenido principal ── -->
-    <main class="tb-main">
+    <!-- ── Layout principal con sidebar ── -->
+    <div class="consola-layout">
 
-        <!-- Titulo + contador -->
-        <div class="tb-page-header">
-            <div>
-                <h1 class="tb-title">Alumnos Asesorados</h1>
-                <p class="tb-subtitle" id="tb-subtitulo">Cargando datos...</p>
+        <!-- ═══ SIDEBAR IZQUIERDO ═══ -->
+        <aside class="consola-sidebar">
+
+            <!-- Módulo: bienvenida -->
+            <div class="sidebar-welcome">
+                <div class="sidebar-avatar">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <span class="sidebar-welcome-label">Bienvenido</span>
+                <span class="sidebar-welcome-name" id="sb-nombre">Cargando...</span>
             </div>
-            <button class="tb-btn-excel" id="btn-excel" onclick="exportarExcel()" disabled>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
+
+            <!-- Módulo: menú de navegación -->
+            <nav class="sidebar-menu">
+                <span class="sidebar-menu-label">Módulos</span>
+
+                <button class="sidebar-item" id="btn-asesorados" onclick="abrirAsesorados()">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Revisa tus asesorados
+                </button>
+            </nav>
+
+            <!-- Logout al fondo -->
+            <div class="sidebar-logout">
+                <a href="/api/logout">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Cerrar sesión
+                </a>
+            </div>
+
+        </aside>
+
+        <!-- ═══ ÁREA DE CONTENIDO ═══ -->
+        <section class="consola-content">
+
+            <!-- Panel de inicio (visible por defecto, se oculta al elegir módulo) -->
+            <div id="panel-inicio" class="panel-inicio">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--udep-blue)">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
                 </svg>
-                Exportar a Excel
-            </button>
-        </div>
+                <h2>Selecciona un módulo</h2>
+                <p>Elige una opción del menú lateral para comenzar.</p>
+            </div>
 
-        <!-- Estado de carga / error -->
-        <div id="tb-estado" class="tb-estado">
-            <div class="tb-spinner"></div>
-            <span>Consultando base de datos...</span>
-        </div>
+            <!-- Panel: Mis asesorados (oculto hasta hacer clic) -->
+            <div id="panel-asesorados" style="display:none;">
 
-        <!-- Tabla -->
-        <div class="tb-table-wrap" id="tb-table-wrap" style="display:none;">
-            <table class="tb-table" id="tb-tabla">
-                <thead>
-                    <tr>
-                        <th class="col-num">N°</th>
-                        <th>Código</th>
-                        <th>Apellidos</th>
-                        <th>Nombres</th>
-                        <th>Programa</th>
-                        <th>Campus</th>
-                        <th>P. Admisión</th>
-                        <th>Ciclo</th>
-                        <th>Atributo</th>
-                    </tr>
-                </thead>
-                <tbody id="tb-body"></tbody>
-            </table>
-        </div>
+                <!-- Encabezado del panel -->
+                <div class="tb-page-header">
+                    <div>
+                        <h1 class="tb-title">Alumnos Asesorados</h1>
+                        <p class="tb-subtitle" id="tb-subtitulo">Consultando base de datos...</p>
+                    </div>
+                    <button class="tb-btn-excel" id="btn-excel" onclick="exportarExcel()" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Exportar a Excel
+                    </button>
+                </div>
 
-    </main>
+                <!-- Estado de carga / error -->
+                <div id="tb-estado" class="tb-estado" style="display:none;">
+                    <div class="tb-spinner"></div>
+                    <span>Consultando base de datos...</span>
+                </div>
+
+                <!-- Tabla -->
+                <div class="tb-table-wrap" id="tb-table-wrap" style="display:none;">
+                    <table class="tb-table" id="tb-tabla">
+                        <thead>
+                            <tr>
+                                <th class="col-num">N°</th>
+                                <th>Código</th>
+                                <th>Apellidos</th>
+                                <th>Nombres</th>
+                                <th>Programa</th>
+                                <th>Campus</th>
+                                <th>P. Admisión</th>
+                                <th>Ciclo</th>
+                                <th>Atributo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tb-body"></tbody>
+                    </table>
+                </div>
+
+            </div><!-- /panel-asesorados -->
+
+        </section>
+
+    </div><!-- /consola-layout -->
 
     <script>
         // ──────────────────────────────────────────────────
-        //  Etiquetas amigables por columna
+        //  Columnas y etiquetas
         // ──────────────────────────────────────────────────
         const LABELS = {
-            SPRIDEN_ID:             'Código',
-            SPRIDEN_FIRST_NAME:     'Nombres',
-            SPRIDEN_LAST_NAME:      'Apellidos',
-            SORLCUR_PROGRAM:        'Programa',
-            SORLCUR_CAMP_CODE:      'Campus',
-            SORLCUR_TERM_CODE_ADMIT:'P. Admisión',
-            CICLO_ACTUAL:           'Ciclo',
-            ATRIBUTO_ALUMNO:        'Atributo'
+            SPRIDEN_ID:              'Código',
+            SPRIDEN_FIRST_NAME:      'Nombres',
+            SPRIDEN_LAST_NAME:       'Apellidos',
+            SORLCUR_PROGRAM:         'Programa',
+            SORLCUR_CAMP_CODE:       'Campus',
+            SORLCUR_TERM_CODE_ADMIT: 'P. Admisión',
+            CICLO_ACTUAL:            'Ciclo',
+            ATRIBUTO_ALUMNO:         'Atributo'
         };
 
-        // Orden de columnas visibles en la tabla HTML
         const COLS_VISIBLE = [
             'SPRIDEN_ID', 'SPRIDEN_LAST_NAME', 'SPRIDEN_FIRST_NAME',
             'SORLCUR_PROGRAM', 'SORLCUR_CAMP_CODE',
             'SORLCUR_TERM_CODE_ADMIT', 'CICLO_ACTUAL', 'ATRIBUTO_ALUMNO'
         ];
 
-        let datosGlobales = [];
+        let datosGlobales  = [];
+        let asesoradosCargados = false;
 
         // ──────────────────────────────────────────────────
-        //  Inicialización
+        //  Al cargar la página: solo sesión (sin alumnos)
         // ──────────────────────────────────────────────────
         async function init() {
-            // Verificar sesión
             const sesRes = await fetch('/api/sesion');
             if (sesRes.status === 401) { window.location.href = '/'; return; }
+
             const ses = await sesRes.json();
             if (ses.success) {
-                document.getElementById('tb-usuario').textContent = ses.usuario;
+                document.getElementById('sb-nombre').textContent =
+                    ses.name || ses.usuario;
             }
+        }
 
-            // Cargar alumnos
+        // ──────────────────────────────────────────────────
+        //  Abrir panel de asesorados (clic en sidebar)
+        // ──────────────────────────────────────────────────
+        async function abrirAsesorados() {
+            // Marcar ítem activo
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn-asesorados').classList.add('active');
+
+            // Ocultar panel inicio, mostrar panel asesorados
+            document.getElementById('panel-inicio').style.display    = 'none';
+            document.getElementById('panel-asesorados').style.display = '';
+
+            // Solo cargar datos una vez
+            if (asesoradosCargados) return;
+
+            // Mostrar spinner
+            document.getElementById('tb-estado').style.display    = 'flex';
+            document.getElementById('tb-table-wrap').style.display = 'none';
+            document.getElementById('tb-subtitulo').textContent    = 'Consultando base de datos...';
+
             try {
                 const res  = await fetch('/api/alumnos');
                 const data = await res.json();
@@ -127,8 +394,9 @@
                 document.getElementById('tb-subtitulo').textContent =
                     `${total} alumno${total !== 1 ? 's' : ''} asignado${total !== 1 ? 's' : ''}`;
 
-                document.getElementById('btn-excel').disabled = false;
+                document.getElementById('btn-excel').disabled      = false;
                 document.getElementById('tb-table-wrap').style.display = '';
+                asesoradosCargados = true;
 
             } catch (err) {
                 mostrarError('No se pudo conectar con el servidor');
@@ -145,19 +413,16 @@
             datos.forEach((fila, idx) => {
                 const tr = document.createElement('tr');
 
-                // Número de fila
                 const tdNum = document.createElement('td');
-                tdNum.className = 'col-num';
+                tdNum.className   = 'col-num';
                 tdNum.textContent = idx + 1;
                 tr.appendChild(tdNum);
 
                 COLS_VISIBLE.forEach(col => {
-                    const td = document.createElement('td');
+                    const td  = document.createElement('td');
                     const val = fila[col];
                     td.textContent = (val === null || val === undefined) ? '—' : val;
-                    if (col === 'ATRIBUTO_ALUMNO' && val) {
-                        td.className = 'col-badge';
-                    }
+                    if (col === 'ATRIBUTO_ALUMNO' && val) td.className = 'col-badge';
                     tr.appendChild(td);
                 });
 
@@ -166,12 +431,11 @@
         }
 
         // ──────────────────────────────────────────────────
-        //  Exportar a Excel con SheetJS
+        //  Exportar a Excel
         // ──────────────────────────────────────────────────
         function exportarExcel() {
             if (!datosGlobales.length) return;
 
-            // Construir filas con etiquetas amigables
             const encabezado = ['N°', ...COLS_VISIBLE.map(c => LABELS[c] || c)];
             const filas = datosGlobales.map((fila, idx) => {
                 const row = [idx + 1];
@@ -182,31 +446,19 @@
                 return row;
             });
 
-            const wsData = [encabezado, ...filas];
-            const ws     = XLSX.utils.aoa_to_sheet(wsData);
-
-            // Ancho de columnas
+            const ws = XLSX.utils.aoa_to_sheet([encabezado, ...filas]);
             ws['!cols'] = [
-                { wch: 5 },  // N°
-                { wch: 12 }, // Código
-                { wch: 22 }, // Apellidos
-                { wch: 22 }, // Nombres
-                { wch: 30 }, // Programa
-                { wch: 8 },  // Campus
-                { wch: 13 }, // P. Admisión
-                { wch: 8 },  // Ciclo
-                { wch: 20 }, // Atributo
+                { wch: 5 }, { wch: 12 }, { wch: 22 }, { wch: 22 },
+                { wch: 30 }, { wch: 8 }, { wch: 13 }, { wch: 8 }, { wch: 20 }
             ];
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Asesorados');
-
-            const fecha  = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(wb, `Asesorados_${fecha}.xlsx`);
+            XLSX.writeFile(wb, `Asesorados_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
         // ──────────────────────────────────────────────────
-        //  Mensaje de error
+        //  Error en panel de asesorados
         // ──────────────────────────────────────────────────
         function mostrarError(msg) {
             const el = document.getElementById('tb-estado');
@@ -218,6 +470,7 @@
                 <span>${msg}</span>`;
             el.classList.add('tb-estado--error');
             el.style.display = 'flex';
+            document.getElementById('tb-subtitulo').textContent = 'Error al cargar datos';
         }
 
         init();
@@ -225,3 +478,16 @@
 
 </body>
 </html>
+        <div class="tb-navbar-brand">
+            <div class="tb-logo-text">
+                Universidad de Piura
+                <span>Sistema de Asesoramiento</span>
+            </div>
+        </div>
+        <div class="tb-navbar-right">
+            <span class="tb-user-badge" id="tb-usuario">—</span>
+            <a href="/api/logout" class="tb-btn-logout">Cerrar sesión</a>
+        </div>
+    </header>
+
+    <!-- ── Layout principal con sidebar ── -->
