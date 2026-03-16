@@ -296,16 +296,8 @@
                 <div class="tb-table-wrap" id="tb-table-wrap" style="display:none;">
                     <table class="tb-table" id="tb-tabla">
                         <thead>
-                            <tr>
+                            <tr id="tb-head-row">
                                 <th class="col-num">N°</th>
-                                <th>Código</th>
-                                <th>Apellidos</th>
-                                <th>Nombres</th>
-                                <th>Programa</th>
-                                <th>Campus</th>
-                                <th>P. Admisión</th>
-                                <th>Ciclo</th>
-                                <th>Atributo</th>
                             </tr>
                         </thead>
                         <tbody id="tb-body"></tbody>
@@ -323,23 +315,50 @@
         //  Columnas y etiquetas
         // ──────────────────────────────────────────────────
         const LABELS = {
+            REQ_NO:                  'Req. No',
+            ULTIMO_PERIODO_SFRENSP:  'Periodo SFRENSP',
+            KEY_SEQNO:               'Key Seqno',
+            PROMEDIO:                'Promedio',
             SPRIDEN_ID:              'Código',
             SPRIDEN_FIRST_NAME:      'Nombres',
             SPRIDEN_LAST_NAME:       'Apellidos',
             SORLCUR_PROGRAM:         'Programa',
             SORLCUR_CAMP_CODE:       'Campus',
             SORLCUR_TERM_CODE_ADMIT: 'P. Admisión',
+            SGRSTSP_KEY_SEQNO:       'Key Secuencia',
+            SORLCUR_SEQNO:           'Secuencia Programa',
             CICLO_ACTUAL:            'Ciclo',
-            ATRIBUTO_ALUMNO:         'Atributo'
+            NIVEL_ACTUAL:            'Nivel',
+            PERIODO_SGRSATT:         'Periodo SGRSATT',
+            BECAS:                   'Becas',
+            REND_ACAD:               'Rend. Acad.',
+            PRONABEC:                'Pronabec',
+            ATRIBUTOS_CONTABLES:     'Atrib. Contables',
+            PRE_SELECCIONADO_PRONABEC: 'Preselecc. Pronabec',
+            CORREO:                  'Correo',
+            TELEFONO:                'Teléfono'
         };
 
-        const COLS_VISIBLE = [
+        const COLS_PREFERIDAS = [
             'SPRIDEN_ID', 'SPRIDEN_LAST_NAME', 'SPRIDEN_FIRST_NAME',
             'SORLCUR_PROGRAM', 'SORLCUR_CAMP_CODE',
-            'SORLCUR_TERM_CODE_ADMIT', 'CICLO_ACTUAL', 'ATRIBUTO_ALUMNO'
+            'SORLCUR_TERM_CODE_ADMIT', 'REQ_NO', 'PROMEDIO',
+            'CICLO_ACTUAL', 'NIVEL_ACTUAL', 'ULTIMO_PERIODO_SFRENSP',
+            'PERIODO_SGRSATT', 'BECAS', 'REND_ACAD', 'PRONABEC',
+            'ATRIBUTOS_CONTABLES', 'PRE_SELECCIONADO_PRONABEC',
+            'CORREO', 'TELEFONO'
         ];
 
-        let datosGlobales  = [];
+        const COLS_OCULTAS = new Set([
+            'SPRIDEN_PIDM', 'SGRSTSP_KEY_SEQNO', 'SORLCUR_SEQNO', 'KEY_SEQNO'
+        ]);
+
+        const COLS_BADGE = new Set([
+            'BECAS', 'REND_ACAD', 'PRONABEC', 'ATRIBUTOS_CONTABLES', 'PRE_SELECCIONADO_PRONABEC'
+        ]);
+
+        let datosGlobales = [];
+        let columnasGlobales = [];
         let asesoradosCargados = false;
 
         // ──────────────────────────────────────────────────
@@ -388,7 +407,9 @@
                 }
 
                 datosGlobales = data.datos;
-                renderTabla(data.datos);
+                columnasGlobales = obtenerColumnasVisibles(data.columnas || []);
+                renderEncabezado(columnasGlobales);
+                renderTabla(data.datos, columnasGlobales);
 
                 const total = data.total;
                 document.getElementById('tb-subtitulo').textContent =
@@ -404,9 +425,49 @@
         }
 
         // ──────────────────────────────────────────────────
+        //  Resolver columnas visibles
+        // ──────────────────────────────────────────────────
+        function obtenerColumnasVisibles(columnas) {
+            const columnasFiltradas = columnas.filter(col => !COLS_OCULTAS.has(col));
+            const preferidas = COLS_PREFERIDAS.filter(col => columnasFiltradas.includes(col));
+            const adicionales = columnasFiltradas.filter(col => !preferidas.includes(col));
+            return [...preferidas, ...adicionales];
+        }
+
+        // ──────────────────────────────────────────────────
+        //  Renderizar encabezado
+        // ──────────────────────────────────────────────────
+        function renderEncabezado(columnas) {
+            const headRow = document.getElementById('tb-head-row');
+            headRow.innerHTML = '';
+
+            const thNum = document.createElement('th');
+            thNum.className = 'col-num';
+            thNum.textContent = 'N°';
+            headRow.appendChild(thNum);
+
+            columnas.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = LABELS[col] || formatearNombreColumna(col);
+                headRow.appendChild(th);
+            });
+        }
+
+        // ──────────────────────────────────────────────────
+        //  Etiqueta amigable para columnas sin alias visual
+        // ──────────────────────────────────────────────────
+        function formatearNombreColumna(columna) {
+            return columna
+                .toLowerCase()
+                .split('_')
+                .map(fragmento => fragmento.charAt(0).toUpperCase() + fragmento.slice(1))
+                .join(' ');
+        }
+
+        // ──────────────────────────────────────────────────
         //  Renderizar filas
         // ──────────────────────────────────────────────────
-        function renderTabla(datos) {
+        function renderTabla(datos, columnas) {
             const tbody = document.getElementById('tb-body');
             tbody.innerHTML = '';
 
@@ -418,11 +479,11 @@
                 tdNum.textContent = idx + 1;
                 tr.appendChild(tdNum);
 
-                COLS_VISIBLE.forEach(col => {
+                columnas.forEach(col => {
                     const td  = document.createElement('td');
                     const val = fila[col];
                     td.textContent = (val === null || val === undefined) ? '—' : val;
-                    if (col === 'ATRIBUTO_ALUMNO' && val) td.className = 'col-badge';
+                    if (COLS_BADGE.has(col) && val) td.className = 'col-badge';
                     tr.appendChild(td);
                 });
 
@@ -434,12 +495,12 @@
         //  Exportar a Excel
         // ──────────────────────────────────────────────────
         function exportarExcel() {
-            if (!datosGlobales.length) return;
+            if (!datosGlobales.length || !columnasGlobales.length) return;
 
-            const encabezado = ['N°', ...COLS_VISIBLE.map(c => LABELS[c] || c)];
+            const encabezado = ['N°', ...columnasGlobales.map(c => LABELS[c] || formatearNombreColumna(c))];
             const filas = datosGlobales.map((fila, idx) => {
                 const row = [idx + 1];
-                COLS_VISIBLE.forEach(col => {
+                columnasGlobales.forEach(col => {
                     const val = fila[col];
                     row.push((val === null || val === undefined) ? '' : val);
                 });
@@ -447,14 +508,25 @@
             });
 
             const ws = XLSX.utils.aoa_to_sheet([encabezado, ...filas]);
-            ws['!cols'] = [
-                { wch: 5 }, { wch: 12 }, { wch: 22 }, { wch: 22 },
-                { wch: 30 }, { wch: 8 }, { wch: 13 }, { wch: 8 }, { wch: 20 }
-            ];
+            ws['!cols'] = calcularAnchosExcel(encabezado, filas);
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Asesorados');
             XLSX.writeFile(wb, `Asesorados_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        // ──────────────────────────────────────────────────
+        //  Ajustar anchos para exportación Excel
+        // ──────────────────────────────────────────────────
+        function calcularAnchosExcel(encabezado, filas) {
+            return encabezado.map((titulo, index) => {
+                const anchoMaximo = filas.reduce((maximo, fila) => {
+                    const valor = fila[index] === null || fila[index] === undefined ? '' : String(fila[index]);
+                    return Math.max(maximo, valor.length);
+                }, String(titulo).length);
+
+                return { wch: Math.min(Math.max(anchoMaximo + 2, 8), 40) };
+            });
         }
 
         // ──────────────────────────────────────────────────
