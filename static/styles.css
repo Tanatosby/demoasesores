@@ -582,17 +582,118 @@ body.tabla-page .bg-pattern {
     padding: 11px 16px;
     color: var(--text-dark);
     white-space: nowrap;
+    max-height: 46px;
 }
 
 .tb-table td.col-contacto {
-    white-space: normal;
-    min-width: 320px;
-    vertical-align: top;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.contact-list {
-    display: grid;
+.contact-preview {
+    display: flex;
+    align-items: center;
     gap: 8px;
+    min-width: 0;
+}
+
+.contact-preview-value {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-size: .88rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+}
+
+.contact-preview-value:hover {
+    color: var(--udep-blue-mid);
+}
+
+.contact-more-btn {
+    border: none;
+    background: #e7eef9;
+    color: var(--udep-blue-mid);
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: .68rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.contact-more-btn:hover {
+    background: #dbe7fa;
+}
+
+body.overlay-open {
+    overflow: hidden;
+}
+
+.contact-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+}
+
+.contact-overlay-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 19, 41, 0.44);
+    backdrop-filter: blur(1.5px);
+}
+
+.contact-overlay-panel {
+    position: relative;
+    width: min(760px, calc(100vw - 28px));
+    max-height: min(82vh, 760px);
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid #d9e2f0;
+    box-shadow: 0 28px 70px rgba(0, 38, 86, 0.28);
+    overflow: hidden;
+    animation: overlayIn .18s ease;
+}
+
+.contact-overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #e7edf7;
+    background: #f8fafd;
+}
+
+.contact-overlay-header h3 {
+    font-family: 'Merriweather', serif;
+    font-size: 1rem;
+    color: var(--udep-blue);
+}
+
+.contact-overlay-close {
+    border: none;
+    background: #e9effa;
+    color: var(--udep-blue);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.contact-overlay-list {
+    padding: 16px 18px 18px;
+    overflow-y: auto;
+    display: grid;
+    gap: 10px;
 }
 
 .contact-card {
@@ -601,9 +702,7 @@ body.tabla-page .bg-pattern {
     padding: 10px 12px;
     border: 1px solid #d8e1f0;
     border-radius: 10px;
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,247,252,0.96) 100%);
-    box-shadow: 0 4px 14px rgba(0,56,118,0.06);
+    background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,247,252,0.96) 100%);
 }
 
 .contact-card-header {
@@ -672,6 +771,17 @@ body.tabla-page .bg-pattern {
     color: #52647d;
 }
 
+@keyframes overlayIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* Columna N° */
 .col-num {
     text-align: center;
@@ -690,7 +800,12 @@ body.tabla-page .bg-pattern {
 
 @media (max-width: 900px) {
     .tb-table td.col-contacto {
-        min-width: 260px;
+        max-width: 250px;
+    }
+
+    .contact-overlay-panel {
+        width: calc(100vw - 18px);
+        max-height: 86vh;
     }
 }
 

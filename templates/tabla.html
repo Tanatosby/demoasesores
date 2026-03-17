@@ -306,6 +306,17 @@
 
             </div><!-- /panel-asesorados -->
 
+            <div id="contact-overlay" class="contact-overlay" hidden>
+                <div class="contact-overlay-backdrop" onclick="cerrarOverlayContactos()"></div>
+                <div class="contact-overlay-panel" role="dialog" aria-modal="true" aria-labelledby="contact-overlay-title">
+                    <div class="contact-overlay-header">
+                        <h3 id="contact-overlay-title">Contactos</h3>
+                        <button type="button" class="contact-overlay-close" aria-label="Cerrar" onclick="cerrarOverlayContactos()">×</button>
+                    </div>
+                    <div id="contact-overlay-list" class="contact-overlay-list"></div>
+                </div>
+            </div>
+
         </section>
 
     </div><!-- /consola-layout -->
@@ -509,14 +520,22 @@
                 return;
             }
 
-            const list = document.createElement('div');
-            list.className = 'contact-list';
+            const preview = document.createElement('div');
+            preview.className = 'contact-preview';
 
-            contactos.forEach(contacto => {
-                list.appendChild(crearCardContacto(contacto, columna));
-            });
+            const principal = crearEnlaceContacto(contactos[0].dato, columna, 'contact-preview-value');
+            preview.appendChild(principal);
 
-            td.appendChild(list);
+            if (contactos.length > 1) {
+                const btnMore = document.createElement('button');
+                btnMore.type = 'button';
+                btnMore.className = 'contact-more-btn';
+                btnMore.textContent = `+${contactos.length - 1} más`;
+                btnMore.addEventListener('click', () => abrirOverlayContactos(columna, contactos));
+                preview.appendChild(btnMore);
+            }
+
+            td.appendChild(preview);
         }
 
         function parsearContactos(valor) {
@@ -552,7 +571,7 @@
                 .trim();
         }
 
-        function crearCardContacto(contacto, columna) {
+        function crearCardContacto(contacto, columna, indice) {
             const card = document.createElement('div');
             card.className = 'contact-card';
 
@@ -561,15 +580,10 @@
 
             const kind = document.createElement('span');
             kind.className = 'contact-card-kind';
-            kind.textContent = columna === 'CORREO' ? 'Correo' : 'Teléfono';
+            kind.textContent = `${columna === 'CORREO' ? 'Correo' : 'Teléfono'} ${indice}`;
             header.appendChild(kind);
 
-            const value = document.createElement('a');
-            value.className = 'contact-card-value';
-            value.textContent = contacto.dato;
-            value.href = columna === 'CORREO'
-                ? `mailto:${contacto.dato}`
-                : `tel:${contacto.dato.replace(/[^\d+]/g, '')}`;
+            const value = crearEnlaceContacto(contacto.dato, columna, 'contact-card-value');
             header.appendChild(value);
 
             card.appendChild(header);
@@ -595,6 +609,16 @@
             return card;
         }
 
+        function crearEnlaceContacto(dato, columna, className) {
+            const link = document.createElement('a');
+            link.className = className;
+            link.textContent = dato;
+            link.href = columna === 'CORREO'
+                ? `mailto:${dato}`
+                : `tel:${dato.replace(/[^\d+]/g, '')}`;
+            return link;
+        }
+
         function crearChipContacto(texto, className) {
             const chip = document.createElement('span');
             chip.className = className;
@@ -615,6 +639,35 @@
 
             return 'contact-chip--estado-neutro';
         }
+
+        function abrirOverlayContactos(columna, contactos) {
+            const overlay = document.getElementById('contact-overlay');
+            const title = document.getElementById('contact-overlay-title');
+            const list = document.getElementById('contact-overlay-list');
+
+            title.textContent = columna === 'CORREO' ? 'Correos registrados' : 'Teléfonos registrados';
+            list.innerHTML = '';
+
+            contactos.forEach((contacto, idx) => {
+                list.appendChild(crearCardContacto(contacto, columna, idx + 1));
+            });
+
+            overlay.hidden = false;
+            document.body.classList.add('overlay-open');
+        }
+
+        function cerrarOverlayContactos() {
+            const overlay = document.getElementById('contact-overlay');
+            overlay.hidden = true;
+            document.body.classList.remove('overlay-open');
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('contact-overlay');
+                if (overlay && !overlay.hidden) cerrarOverlayContactos();
+            }
+        });
 
         // ──────────────────────────────────────────────────
         //  Exportar a Excel
@@ -675,16 +728,3 @@
 
 </body>
 </html>
-        <div class="tb-navbar-brand">
-            <div class="tb-logo-text">
-                Universidad de Piura
-                <span>Sistema de Asesoramiento</span>
-            </div>
-        </div>
-        <div class="tb-navbar-right">
-            <span class="tb-user-badge" id="tb-usuario">—</span>
-            <a href="/api/logout" class="tb-btn-logout">Cerrar sesión</a>
-        </div>
-    </header>
-
-    <!-- ── Layout principal con sidebar ── -->
