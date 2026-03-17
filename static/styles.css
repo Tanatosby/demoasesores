@@ -558,6 +558,35 @@ body.tabla-page .bg-pattern {
     border-bottom: 3px solid var(--udep-red);
 }
 
+.tb-table thead th.th-sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 28px;
+}
+
+.tb-table thead th.th-sortable::after {
+    content: '\2195';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: .72rem;
+    opacity: .55;
+}
+
+.tb-table thead th.th-sortable.is-sorted::after {
+    opacity: 1;
+}
+
+.tb-table thead th.th-sortable.is-asc::after {
+    content: '\2191';
+}
+
+.tb-table thead th.th-sortable.is-desc::after {
+    content: '\2193';
+}
+
 .tb-table tbody tr {
     border-bottom: 1px solid #edf0f6;
     transition: background .15s;
@@ -608,6 +637,15 @@ body.tabla-page .bg-pattern {
     white-space: nowrap;
     min-width: 0;
     flex: 1;
+}
+
+.contact-preview-trigger {
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
 }
 
 .contact-preview-value:hover {

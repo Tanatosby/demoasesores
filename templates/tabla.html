@@ -371,8 +371,10 @@
         const COLS_CONTACTO = new Set(['CORREO', 'TELEFONO']);
 
         let datosGlobales = [];
+        let datosVista = [];
         let columnasGlobales = [];
         let asesoradosCargados = false;
+        let sortState = { columna: '__rowIndex', direccion: 'asc' };
 
         // ──────────────────────────────────────────────────
         //  Al cargar la página: solo sesión (sin alumnos)
@@ -419,10 +421,14 @@
                     return;
                 }
 
-                datosGlobales = data.datos;
+                datosGlobales = (data.datos || []).map((fila, indice) => ({
+                    ...fila,
+                    __rowIndex: indice
+                }));
+                datosVista = [...datosGlobales];
                 columnasGlobales = obtenerColumnasVisibles(data.columnas || []);
                 renderEncabezado(columnasGlobales);
-                renderTabla(data.datos, columnasGlobales);
+                aplicarOrdenActual();
 
                 const total = data.total;
                 document.getElementById('tb-subtitulo').textContent =
@@ -455,15 +461,129 @@
             headRow.innerHTML = '';
 
             const thNum = document.createElement('th');
-            thNum.className = 'col-num';
+            thNum.className = 'col-num th-sortable';
             thNum.textContent = 'N°';
+            thNum.addEventListener('click', () => ordenarPorColumna('__rowIndex'));
+            aplicarEstadoVisualOrden(thNum, '__rowIndex');
             headRow.appendChild(thNum);
 
             columnas.forEach(col => {
                 const th = document.createElement('th');
                 th.textContent = LABELS[col] || formatearNombreColumna(col);
+                th.classList.add('th-sortable');
+                th.addEventListener('click', () => ordenarPorColumna(col));
+                aplicarEstadoVisualOrden(th, col);
                 headRow.appendChild(th);
             });
+        }
+
+        function aplicarEstadoVisualOrden(th, columna) {
+            if (sortState.columna !== columna) return;
+            th.classList.add('is-sorted');
+            th.classList.add(sortState.direccion === 'asc' ? 'is-asc' : 'is-desc');
+        }
+
+        function ordenarPorColumna(columna) {
+            if (sortState.columna === columna) {
+                sortState.direccion = sortState.direccion === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.columna = columna;
+                sortState.direccion = 'asc';
+            }
+
+            aplicarOrdenActual();
+        }
+
+        function aplicarOrdenActual() {
+            const { columna, direccion } = sortState;
+            const factor = direccion === 'asc' ? 1 : -1;
+
+            datosVista = [...datosGlobales].sort((a, b) => {
+                const valorA = obtenerValorComparable(a[columna], columna);
+                const valorB = obtenerValorComparable(b[columna], columna);
+
+                if (valorA.tipo !== valorB.tipo) {
+                    return valorA.tipo === 'number' ? -1 : 1;
+                }
+
+                if (valorA.valor < valorB.valor) return -1 * factor;
+                if (valorA.valor > valorB.valor) return 1 * factor;
+
+                // Desempate consistente por orden original
+                return (a.__rowIndex - b.__rowIndex) * factor;
+            });
+
+            renderEncabezado(columnasGlobales);
+            renderTabla(datosVista, columnasGlobales);
+        }
+
+        function obtenerValorComparable(valorOriginal, columna) {
+            if (columna === '__rowIndex') {
+                const numero = Number(valorOriginal);
+                return { tipo: 'number', valor: Number.isFinite(numero) ? numero : 0 };
+            }
+
+            if (COLS_CONTACTO.has(columna)) {
+                const contactos = parsearContactos(valorOriginal);
+                const principal = contactos[0]?.dato || formatearTextoContactoSinSeparadores(valorOriginal);
+                const texto = normalizarTextoComparacion(principal);
+                return { tipo: 'text', valor: texto };
+            }
+
+            if (valorOriginal === null || valorOriginal === undefined || valorOriginal === '') {
+                return { tipo: 'text', valor: '' };
+            }
+
+            if (typeof valorOriginal === 'number' && Number.isFinite(valorOriginal)) {
+                return { tipo: 'number', valor: valorOriginal };
+            }
+
+            const texto = String(valorOriginal).trim();
+            const periodo = intentarParsearPeriodo(texto);
+            if (periodo !== null) return { tipo: 'number', valor: periodo };
+
+            const numero = intentarParsearNumero(texto);
+            if (numero !== null) return { tipo: 'number', valor: numero };
+
+            return { tipo: 'text', valor: normalizarTextoComparacion(texto) };
+        }
+
+        function intentarParsearPeriodo(texto) {
+            const limpio = texto.replace(/\s+/g, '');
+
+            const matchSeparado = limpio.match(/^(\d{4})[-/.]?(\d{1,2})$/);
+            if (matchSeparado) {
+                const anio = Number(matchSeparado[1]);
+                const periodo = Number(matchSeparado[2]);
+                if (Number.isFinite(anio) && Number.isFinite(periodo)) {
+                    return anio * 100 + periodo;
+                }
+            }
+
+            const matchSoloDigitos = limpio.match(/^(\d{6})$/);
+            if (matchSoloDigitos) {
+                const anio = Number(matchSoloDigitos[1].slice(0, 4));
+                const periodo = Number(matchSoloDigitos[1].slice(4));
+                if (Number.isFinite(anio) && Number.isFinite(periodo)) {
+                    return anio * 100 + periodo;
+                }
+            }
+
+            return null;
+        }
+
+        function intentarParsearNumero(texto) {
+            const normalizado = texto.replace(/,/g, '.');
+            if (!/^[-+]?\d*\.?\d+$/.test(normalizado)) return null;
+            const numero = Number(normalizado);
+            return Number.isFinite(numero) ? numero : null;
+        }
+
+        function normalizarTextoComparacion(texto) {
+            return texto
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
         }
 
         // ──────────────────────────────────────────────────
@@ -522,7 +642,11 @@
             const preview = document.createElement('div');
             preview.className = 'contact-preview';
 
-            const principal = crearEnlaceContacto(contactos[0].dato, columna, 'contact-preview-value');
+            const principal = document.createElement('button');
+            principal.type = 'button';
+            principal.className = 'contact-preview-value contact-preview-trigger';
+            principal.textContent = contactos[0].dato;
+            principal.addEventListener('click', () => abrirOverlayContactos(columna, contactos));
             preview.appendChild(principal);
 
             if (contactos.length > 1) {
@@ -530,6 +654,13 @@
                 btnMore.type = 'button';
                 btnMore.className = 'contact-more-btn';
                 btnMore.textContent = `+${contactos.length - 1} más`;
+                btnMore.addEventListener('click', () => abrirOverlayContactos(columna, contactos));
+                preview.appendChild(btnMore);
+            } else {
+                const btnMore = document.createElement('button');
+                btnMore.type = 'button';
+                btnMore.className = 'contact-more-btn';
+                btnMore.textContent = 'Ver';
                 btnMore.addEventListener('click', () => abrirOverlayContactos(columna, contactos));
                 preview.appendChild(btnMore);
             }
