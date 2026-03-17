@@ -357,6 +357,8 @@
             'BECAS', 'REND_ACAD', 'PRONABEC', 'ATRIBUTOS_CONTABLES', 'PRE_SELECCIONADO_PRONABEC'
         ]);
 
+        const COLS_CONTACTO = new Set(['CORREO', 'TELEFONO']);
+
         let datosGlobales = [];
         let columnasGlobales = [];
         let asesoradosCargados = false;
@@ -482,13 +484,136 @@
                 columnas.forEach(col => {
                     const td  = document.createElement('td');
                     const val = fila[col];
-                    td.textContent = (val === null || val === undefined) ? '—' : val;
-                    if (COLS_BADGE.has(col) && val) td.className = 'col-badge';
+                    const esContactoConSeparadores = typeof val === 'string' && (val.includes('//') || val.includes('||'));
+
+                    if (COLS_CONTACTO.has(col) || esContactoConSeparadores) {
+                        td.classList.add('col-contacto');
+                        renderCeldaContacto(td, val, col);
+                    } else {
+                        td.textContent = (val === null || val === undefined) ? '—' : val;
+                    }
+
+                    if (COLS_BADGE.has(col) && val) td.classList.add('col-badge');
                     tr.appendChild(td);
                 });
 
                 tbody.appendChild(tr);
             });
+        }
+
+        function renderCeldaContacto(td, valor, columna) {
+            const contactos = parsearContactos(valor);
+
+            if (!contactos.length) {
+                td.textContent = formatearTextoContactoSinSeparadores(valor);
+                return;
+            }
+
+            const list = document.createElement('div');
+            list.className = 'contact-list';
+
+            contactos.forEach(contacto => {
+                list.appendChild(crearCardContacto(contacto, columna));
+            });
+
+            td.appendChild(list);
+        }
+
+        function parsearContactos(valor) {
+            if (typeof valor !== 'string') return [];
+
+            return valor
+                .split('//')
+                .map(item => item.trim())
+                .filter(Boolean)
+                .map(item => {
+                    const partes = item
+                        .split('||')
+                        .map(parte => parte.trim())
+                        .filter(Boolean);
+
+                    const dato = partes[0] || '';
+                    const tipo = partes[1] || '';
+                    const estado = partes.slice(2).join(' ') || '';
+
+                    return { dato, tipo, estado };
+                })
+                .filter(contacto => contacto.dato);
+        }
+
+        function formatearTextoContactoSinSeparadores(valor) {
+            if (valor === null || valor === undefined || valor === '') return '—';
+            if (typeof valor !== 'string') return String(valor);
+
+            return valor
+                .replace(/\s*\/\/\s*/g, ' | ')
+                .replace(/\s*\|\|\s*/g, ' - ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function crearCardContacto(contacto, columna) {
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+
+            const header = document.createElement('div');
+            header.className = 'contact-card-header';
+
+            const kind = document.createElement('span');
+            kind.className = 'contact-card-kind';
+            kind.textContent = columna === 'CORREO' ? 'Correo' : 'Teléfono';
+            header.appendChild(kind);
+
+            const value = document.createElement('a');
+            value.className = 'contact-card-value';
+            value.textContent = contacto.dato;
+            value.href = columna === 'CORREO'
+                ? `mailto:${contacto.dato}`
+                : `tel:${contacto.dato.replace(/[^\d+]/g, '')}`;
+            header.appendChild(value);
+
+            card.appendChild(header);
+
+            const meta = document.createElement('div');
+            meta.className = 'contact-card-meta';
+
+            if (contacto.tipo) {
+                meta.appendChild(crearChipContacto(contacto.tipo, 'contact-chip contact-chip--tipo'));
+            }
+
+            if (contacto.estado) {
+                meta.appendChild(crearChipContacto(
+                    contacto.estado,
+                    `contact-chip ${obtenerClaseEstado(contacto.estado)}`
+                ));
+            }
+
+            if (meta.childElementCount) {
+                card.appendChild(meta);
+            }
+
+            return card;
+        }
+
+        function crearChipContacto(texto, className) {
+            const chip = document.createElement('span');
+            chip.className = className;
+            chip.textContent = texto;
+            return chip;
+        }
+
+        function obtenerClaseEstado(estado) {
+            const clave = estado.trim().toUpperCase();
+
+            if (clave === 'PREFERIDO' || clave === 'PRIMARIO') {
+                return 'contact-chip--estado';
+            }
+
+            if (clave === 'OTROS' || clave === 'SECUNDARIO') {
+                return 'contact-chip--estado-secundario';
+            }
+
+            return 'contact-chip--estado-neutro';
         }
 
         // ──────────────────────────────────────────────────

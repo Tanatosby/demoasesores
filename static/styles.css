@@ -584,6 +584,94 @@ body.tabla-page .bg-pattern {
     white-space: nowrap;
 }
 
+.tb-table td.col-contacto {
+    white-space: normal;
+    min-width: 320px;
+    vertical-align: top;
+}
+
+.contact-list {
+    display: grid;
+    gap: 8px;
+}
+
+.contact-card {
+    display: grid;
+    gap: 7px;
+    padding: 10px 12px;
+    border: 1px solid #d8e1f0;
+    border-radius: 10px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,247,252,0.96) 100%);
+    box-shadow: 0 4px 14px rgba(0,56,118,0.06);
+}
+
+.contact-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.contact-card-kind {
+    font-size: .66rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--udep-blue-mid);
+}
+
+.contact-card-value {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-size: .9rem;
+    font-weight: 600;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.contact-card-value:hover {
+    color: var(--udep-blue-mid);
+}
+
+.contact-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.contact-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    line-height: 1.2;
+}
+
+.contact-chip--tipo {
+    background: #e7eef9;
+    color: var(--udep-blue);
+}
+
+.contact-chip--estado {
+    background: #eef4ea;
+    color: #2f6b2f;
+}
+
+.contact-chip--estado-secundario {
+    background: #f5efe3;
+    color: #8a5a00;
+}
+
+.contact-chip--estado-neutro {
+    background: #eef1f5;
+    color: #52647d;
+}
+
 /* Columna N° */
 .col-num {
     text-align: center;
@@ -598,5 +686,11 @@ body.tabla-page .bg-pattern {
     font-size: .78rem;
     font-weight: 600;
     color: var(--udep-blue-mid);
+}
+
+@media (max-width: 900px) {
+    .tb-table td.col-contacto {
+        min-width: 260px;
+    }
 }
 
