@@ -306,12 +306,12 @@
 
             </div><!-- /panel-asesorados -->
 
-            <div id="contact-overlay" class="contact-overlay" hidden>
-                <div class="contact-overlay-backdrop" onclick="cerrarOverlayContactos()"></div>
+            <div id="contact-overlay" class="contact-overlay" aria-hidden="true">
+                <div id="contact-overlay-backdrop" class="contact-overlay-backdrop"></div>
                 <div class="contact-overlay-panel" role="dialog" aria-modal="true" aria-labelledby="contact-overlay-title">
                     <div class="contact-overlay-header">
                         <h3 id="contact-overlay-title">Contactos</h3>
-                        <button type="button" class="contact-overlay-close" aria-label="Cerrar" onclick="cerrarOverlayContactos()">×</button>
+                        <button id="contact-overlay-close" type="button" class="contact-overlay-close" aria-label="Cerrar">×</button>
                     </div>
                     <div id="contact-overlay-list" class="contact-overlay-list"></div>
                 </div>
@@ -495,9 +495,8 @@
                 columnas.forEach(col => {
                     const td  = document.createElement('td');
                     const val = fila[col];
-                    const esContactoConSeparadores = typeof val === 'string' && (val.includes('//') || val.includes('||'));
 
-                    if (COLS_CONTACTO.has(col) || esContactoConSeparadores) {
+                    if (COLS_CONTACTO.has(col)) {
                         td.classList.add('col-contacto');
                         renderCeldaContacto(td, val, col);
                     } else {
@@ -652,20 +651,36 @@
                 list.appendChild(crearCardContacto(contacto, columna, idx + 1));
             });
 
-            overlay.hidden = false;
+            overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
             document.body.classList.add('overlay-open');
         }
 
         function cerrarOverlayContactos() {
             const overlay = document.getElementById('contact-overlay');
-            overlay.hidden = true;
+            overlay.classList.remove('is-open');
+            overlay.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('overlay-open');
+        }
+
+        function inicializarOverlayContactos() {
+            const overlay = document.getElementById('contact-overlay');
+            const backdrop = document.getElementById('contact-overlay-backdrop');
+            const closeBtn = document.getElementById('contact-overlay-close');
+
+            if (backdrop) backdrop.addEventListener('click', cerrarOverlayContactos);
+            if (closeBtn) closeBtn.addEventListener('click', cerrarOverlayContactos);
+            if (overlay) {
+                overlay.addEventListener('click', e => {
+                    if (e.target === overlay) cerrarOverlayContactos();
+                });
+            }
         }
 
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
                 const overlay = document.getElementById('contact-overlay');
-                if (overlay && !overlay.hidden) cerrarOverlayContactos();
+                if (overlay && overlay.classList.contains('is-open')) cerrarOverlayContactos();
             }
         });
 
@@ -723,6 +738,7 @@
             document.getElementById('tb-subtitulo').textContent = 'Error al cargar datos';
         }
 
+        inicializarOverlayContactos();
         init();
     </script>
 

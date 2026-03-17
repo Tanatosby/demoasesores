@@ -638,8 +638,12 @@ body.overlay-open {
     position: fixed;
     inset: 0;
     z-index: 1200;
-    display: grid;
+    display: none;
     place-items: center;
+}
+
+.contact-overlay.is-open {
+    display: grid;
 }
 
 .contact-overlay-backdrop {
